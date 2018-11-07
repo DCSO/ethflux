@@ -20,10 +20,15 @@ will produce an `ethflux` binary.
 ## Usage
 
 ```
-Usage: ethflux [-measurement=string] <iface>
+Usage: ethflux [-help] [-quiet] [-measurement=string] <iface pattern>
+  -help
+    	show help
   -measurement string
     	name of measurement to use in line (default "ethtool")
+  -quiet
+    	do not show warnings
 ```
+The interface parameter supports regular expressions, e.g. `wl.*` would match `wlp4s0` etc.
 
 ## Example
 
