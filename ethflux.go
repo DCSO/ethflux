@@ -22,6 +22,7 @@ func main() {
 		"name of measurement to use in line")
 	help := flag.Bool("help", false, "show help")
 	quiet := flag.Bool("quiet", false, "do not show warnings")
+	useHostname := flag.Bool("hostname", false, "use os.Hostname() rather than FQDN")
 	flag.Parse()
 
 	argsWithoutProg := flag.Args()
@@ -32,7 +33,7 @@ func main() {
 	}
 
 	if *help {
-		fmt.Fprintln(os.Stderr, "Usage: ethflux [-help] [-quiet] [-measurement=string] <iface pattern>")
+		fmt.Fprintln(os.Stderr, "Usage: ethflux [-help] [-quiet] [-hostname] [-measurement=string] <iface pattern>")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
@@ -45,6 +46,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	var hostname string
+	if *useHostname {
+		hostname, err = os.Hostname()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	for _, intf := range ifs {
 		if len(pattern) > 0 {
 			match, err := regexp.MatchString(pattern, intf.Name)
@@ -76,7 +86,12 @@ func main() {
 		tags["interface"] = intf.Name
 
 		var b bytes.Buffer
-		enc := fluxline.NewEncoder(&b)
+		var enc *fluxline.Encoder
+		if *useHostname {
+			enc = fluxline.NewEncoderWithHostname(&b, hostname)
+		} else {
+			enc = fluxline.NewEncoder(&b)
+		}
 		enc.EncodeMap(*msmt, stringStats, tags)
 		fmt.Println(b.String())
 	}
